@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin\Category;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CategoryRequest;
+use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Support\Str;
-use App\Http\Requests\CategoryRequest;
 
 class CategoryController extends Controller
 {
@@ -14,11 +15,13 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::with('products')->get();
+        $categories = Category::select('id', 'name', 'slug')
+            ->latest()
+            ->get();
 
         return response()->json([
             'message' => 'Category List',
-            'data' => $categories
+            'data' => CategoryResource::collection($categories)
         ]);
     }
 
@@ -26,28 +29,29 @@ class CategoryController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(CategoryRequest $request)
-{
-    $category = Category::create([
-        'name' => $request->name,
-        'slug' => Str::slug($request->name),
-    ]);
+    {
+        $category = Category::create([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+        ]);
 
-    return response()->json([
-        'message' => 'Category Created Successfully',
-        'data' => $category
-    ], 201);
-}
+        return response()->json([
+            'message' => 'Category Created Successfully',
+            'data' => new CategoryResource($category)
+        ], 201);
+    }
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        $category = Category::with('products')->findOrFail($id);
+        $category = Category::select('id', 'name', 'slug')
+            ->findOrFail($id);
 
         return response()->json([
             'message' => 'Category Found',
-            'data' => $category
+            'data' => new CategoryResource($category)
         ]);
     }
 
@@ -55,19 +59,19 @@ class CategoryController extends Controller
      * Update the specified resource in storage.
      */
     public function update(CategoryRequest $request, string $id)
-{
-    $category = Category::findOrFail($id);
+    {
+        $category = Category::findOrFail($id);
 
-    $category->update([
-        'name' => $request->name,
-        'slug' => Str::slug($request->name),
-    ]);
+        $category->update([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+        ]);
 
-    return response()->json([
-        'message' => 'Category Updated Successfully',
-        'data' => $category
-    ]);
-}
+        return response()->json([
+            'message' => 'Category Updated Successfully',
+            'data' => new CategoryResource($category)
+        ]);
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -79,8 +83,7 @@ class CategoryController extends Controller
         $category->delete();
 
         return response()->json([
-            'message' => 'Category Deleted Successfully',
-            'data' => $category
+            'message' => 'Category Deleted Successfully'
         ]);
     }
 }

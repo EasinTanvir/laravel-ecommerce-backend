@@ -14,7 +14,7 @@ Route::post('/register', [RegisteredUserController::class, 'store'])
     ->name('register');
 
 Route::post('/login', [LoginHandler::class, 'store'])
-    ->middleware('verified')
+    // ->middleware('verified')
     ->name('login');
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])

@@ -14,10 +14,10 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $posts = Product::all();
+        $products = Product::with('categories')->get();
         return response()->json([
             'message'=>'Product List',
-            'data'=>$posts
+            'data'=>$products
         ]);
     }
 
@@ -25,21 +25,31 @@ class ProductController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(ProductRequest $request)
-    {
-        $product = Product::create($request->validated());
+{
+    $validated = $request->validated();
 
-        return response()->json([
-            'message'=>'Product Created Successfully',
-            'data'=>$product
-        ])->setStatusCode(201);
-    }
+    $product = Product::create([
+        'name' => $validated['name'],
+        'description' => $validated['description'] ?? null,
+        'price' => $validated['price'],
+        'stock' => $validated['stock'],
+        'quantity' => $validated['quantity'] ?? 0,
+    ]);
+
+    $product->categories()->attach($validated['categories']);
+
+    return response()->json([
+        'message' => 'Product Created Successfully',
+        'data' => $product->load('categories')
+    ], 201);
+}
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        $product = Product::findOrFail($id);
+         $product = Product::with('categories')->findOrFail($id);
 
         return response()->json([
             'message'=>'Product Found',
@@ -51,15 +61,26 @@ class ProductController extends Controller
      * Update the specified resource in storage.
      */
     public function update(ProductRequest $request, string $id)
-    {
-        $product = Product::findOrFail($id);
-        $product->update($request->validated());
+{
+    $product = Product::findOrFail($id);
 
-        return response()->json([
-            'message'=>'Product Updated Successfully',
-            'data'=>$product
-        ]);
-    }
+    $validated = $request->validated();
+
+    $product->update([
+        'name' => $validated['name'],
+        'description' => $validated['description'] ?? null,
+        'price' => $validated['price'],
+        'stock' => $validated['stock'],
+        'quantity' => $validated['quantity'] ?? 0,
+    ]);
+
+    $product->categories()->sync($validated['categories']);
+
+    return response()->json([
+        'message' => 'Product Updated Successfully',
+        'data' => $product->load('categories')
+    ]);
+}
 
     /**
      * Remove the specified resource from storage.

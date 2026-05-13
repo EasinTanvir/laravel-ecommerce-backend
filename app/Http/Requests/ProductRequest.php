@@ -32,6 +32,10 @@ class ProductRequest extends FormRequest
             'stock' => ['required', 'integer', 'min:0'],
 
             'quantity' => ['required', 'integer', 'min:0'],
+
+            'categories' => ['required', 'array'],
+
+            'categories.*' => ['exists:categories,id'],
         ];
     }
 

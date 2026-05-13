@@ -12,19 +12,47 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $products = Product::with([
+   public function index()
+{
+    $search = request('search');
+    $perPage = request('per_page', 1);
+
+    $products = Product::with([
             'categories:id,name,slug'
         ])
-        ->latest()
-        ->get();
+        ->when($search, function ($query) use ($search) {
 
-        return response()->json([
-            'message' => 'Product List',
-            'data' => ProductResource::collection($products)
-        ]);
-    }
+            $query->where(function ($q) use ($search) {
+
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+
+            });
+
+        })
+        ->latest()
+        ->paginate($perPage);
+
+    return response()->json([
+
+        'message' => 'Product List',
+
+        'data' => ProductResource::collection(
+            $products->items()
+        ),
+
+        'pagination' => [
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+            'from' => $products->firstItem(),
+            'to' => $products->lastItem(),
+            'has_more_pages' => $products->hasMorePages(),
+        ]
+
+    ]);
+}
 
     /**
      * Store a newly created resource in storage.

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
             $table->integer('stock')->default(0);
-            $table->text('quantity')->nullable();
+            $table->integer('quantity')->default(0);
             $table->timestamps();
         });
     }

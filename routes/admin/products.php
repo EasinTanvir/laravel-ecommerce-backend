@@ -3,8 +3,9 @@
 use App\Http\Controllers\Admin\Products\ProductController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum','admin'])->group(function(){
+Route::apiResource('products', ProductController::class)
+    ->except(['store', 'update', 'destroy']);
 
-Route::apiResource('products',ProductController::class);
-
-});
+Route::apiResource('products', ProductController::class)
+    ->only(['store', 'update', 'destroy'])
+    ->middleware(['auth:sanctum', 'admin']);

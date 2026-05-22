@@ -16,6 +16,7 @@ return new class extends Migration
     $table->id();
 
     $table->foreignId('order_id')
+        ->unique()
         ->constrained()
         ->onDelete('cascade');
 

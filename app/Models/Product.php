@@ -2,30 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'description', 'price', 'stock', 'quantity'  ];
 
+    protected $fillable = [
+        'name',
+        'description',
+        'price',
+        'stock',
+        'quantity',
+        'discount'
+    ];
 
-
-
-      public function categories(): BelongsToMany
+    public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class);
     }
 
-    public function orders()
-{
-    return $this->belongsToMany(Order::class)
-        ->withPivot('quantity', 'price')
-        ->withTimestamps();
-}
-
-
+    public function orders(): BelongsToMany
+    {
+        return $this->belongsToMany(Order::class)
+            ->withPivot('quantity', 'price')
+            ->withTimestamps();
     }
+}

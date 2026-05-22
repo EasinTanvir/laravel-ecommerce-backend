@@ -15,7 +15,7 @@ class ProductController extends Controller
    public function index()
 {
     $search = request('search');
-    $perPage = request('per_page', 1);
+    $perPage = request('per_page', 10);
 
     $products = Product::with([
             'categories:id,name,slug'

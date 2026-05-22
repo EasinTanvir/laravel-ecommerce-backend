@@ -36,6 +36,8 @@ class ProductRequest extends FormRequest
             'categories' => ['required', 'array'],
 
             'categories.*' => ['exists:categories,id'],
+
+            'discount' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

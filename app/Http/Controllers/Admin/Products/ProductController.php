@@ -67,6 +67,7 @@ class ProductController extends Controller
             'price' => $validated['price'],
             'stock' => $validated['stock'],
             'quantity' => $validated['quantity'] ?? 0,
+            'discount' => $validated['discount'] ?? 0,
         ]);
 
         $product->categories()->attach($validated['categories']);
@@ -109,6 +110,7 @@ class ProductController extends Controller
             'price' => $validated['price'],
             'stock' => $validated['stock'],
             'quantity' => $validated['quantity'] ?? 0,
+            'discount' => $validated['discount'] ?? 0,
         ]);
 
         $product->categories()->sync($validated['categories']);

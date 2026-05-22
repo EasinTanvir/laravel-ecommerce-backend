@@ -2,48 +2,119 @@
 
 namespace App\Http\Controllers\Admin\Orders;
 
-use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\OrderRequest;
+use App\Http\Resources\OrderResource;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $orders = Order::with([
+            'user:id,name,email',
+            'payment',
+            'products:id,name,price'
+        ])
+        ->latest()
+        ->paginate(10);
+
+        return response()->json([
+            'message' => 'Order List',
+            'data' => OrderResource::collection($orders),
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(OrderRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        $totalAmount = 0;
+
+        $productsData = [];
+
+        foreach ($validated['products'] as $item) {
+
+            $product = Product::findOrFail($item['product_id']);
+
+            $subtotal = $product->price * $item['quantity'];
+
+            $totalAmount += $subtotal;
+
+            $productsData[$product->id] = [
+                'quantity' => $item['quantity'],
+                'price' => $product->price,
+            ];
+        }
+
+        $order = Order::create([
+            'user_id' => $request->user()->id,
+            'total_amount' => $totalAmount,
+            'shipping_address' => $validated['shipping_address'],
+            'status' => 'pending',
+        ]);
+
+        $order->products()->attach($productsData);
+
+        $order->payment()->create([
+            'amount' => $totalAmount,
+            'payment_method' => $validated['payment_method'],
+            'status' => 'pending',
+        ]);
+
+        $order->load([
+            'user:id,name,email',
+            'payment',
+            'products:id,name,price'
+        ]);
+
+        return response()->json([
+            'message' => 'Order Created Successfully',
+            'data' => new OrderResource($order)
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Order $order)
     {
-        //
+        $order->load([
+            'user:id,name,email',
+            'payment',
+            'products:id,name,price'
+        ]);
+
+        return response()->json([
+            'message' => 'Order Found',
+            'data' => new OrderResource($order)
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Order $order)
     {
-        //
+        $validated = $request->validate([
+            'status' => [
+                'required',
+                'in:pending,processing,completed,cancelled'
+            ]
+        ]);
+
+        $order->update([
+            'status' => $validated['status']
+        ]);
+
+        return response()->json([
+            'message' => 'Order Updated Successfully',
+            'data' => new OrderResource($order)
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Order $order)
     {
-        //
+        $order->delete();
+
+        return response()->json([
+            'message' => 'Order Deleted Successfully'
+        ]);
     }
 }

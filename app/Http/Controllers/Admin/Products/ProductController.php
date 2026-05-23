@@ -12,47 +12,152 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-   public function index()
+
+    public function index()
 {
     $search = request('search');
-    $perPage = request('per_page', 10);
+
+    $perPage = request(
+        'per_page',
+        8
+    );
+
+    $minPrice = request(
+        'min_price'
+    );
+
+    $maxPrice = request(
+        'max_price'
+    );
+
+    $sort = request(
+        'sort',
+        'latest'
+    );
+
+    $categories = request(
+        'categories'
+    );
 
     $products = Product::with([
             'categories:id,name,slug'
         ])
-        ->when($search, function ($query) use ($search) {
 
-            $query->where(function ($q) use ($search) {
+        // search
+        ->when($search, function (
+            $query
+        ) use ($search) {
 
-                $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('description', 'LIKE', "%{$search}%");
+            $query->where(
+                function ($q) use (
+                    $search
+                ) {
 
-            });
+                    $q->where(
+                        'name',
+                        'LIKE',
+                        "%{$search}%"
+                    )
 
+                    ->orWhere(
+                        'description',
+                        'LIKE',
+                        "%{$search}%"
+                    );
+                });
         })
-        ->latest()
+
+        // categories
+
+        ->when($categories, function (
+    $query
+) use ($categories) {
+
+    $slugs = explode(
+        ',',
+        (string) $categories
+    );
+
+    $query->whereHas(
+        'categories',
+        function ($q) use (
+            $slugs
+        ) {
+
+            $q->whereIn(
+                'slug',
+                $slugs
+            );
+        }
+    );
+})
+
+        // min price
+        ->when($minPrice, function (
+            $query
+        ) use ($minPrice) {
+
+            $query->where(
+                'price',
+                '>=',
+                $minPrice
+            );
+        })
+
+        // max price
+        ->when($maxPrice, function (
+            $query
+        ) use ($maxPrice) {
+
+            $query->where(
+                'price',
+                '<=',
+                $maxPrice
+            );
+        })
+
+        // latest
+        ->when($sort === 'latest',
+            function ($query) {
+
+            $query->latest();
+        })
+
+        // oldest
+        ->when($sort === 'oldest',
+            function ($query) {
+
+            $query->oldest();
+        })
+
         ->paginate($perPage);
 
     return response()->json([
 
         'message' => 'Product List',
 
-        'data' => ProductResource::collection(
-            $products->items()
-        ),
+        'products' =>
+            ProductResource::collection(
+                $products->items()
+            ),
 
         'pagination' => [
-            'current_page' => $products->currentPage(),
-            'last_page' => $products->lastPage(),
-            'per_page' => $products->perPage(),
-            'total' => $products->total(),
-            'from' => $products->firstItem(),
-            'to' => $products->lastItem(),
-            'has_more_pages' => $products->hasMorePages(),
-        ]
 
+            'current_page' =>
+                $products->currentPage(),
+
+            'last_page' =>
+                $products->lastPage(),
+
+            'per_page' =>
+                $products->perPage(),
+
+            'total' =>
+                $products->total(),
+        ]
     ]);
 }
+
 
     /**
      * Store a newly created resource in storage.

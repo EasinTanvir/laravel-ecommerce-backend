@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OrderRequest;
 use App\Http\Resources\OrderResource;
+use Stripe\Stripe;
+use Stripe\PaymentIntent;
 
 class OrderController extends Controller
 {
@@ -49,6 +51,16 @@ class OrderController extends Controller
             ];
         }
 
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+      $paymentIntent = PaymentIntent::create([
+    'amount' => $totalAmount * 100,
+    'currency' => 'usd',
+    'automatic_payment_methods' => [
+        'enabled' => true,
+            ],
+       ]);
+
         $order = Order::create([
             'user_id' => $request->user()->id,
             'total_amount' => $totalAmount,
@@ -62,6 +74,7 @@ class OrderController extends Controller
             'amount' => $totalAmount,
             'payment_method' => $validated['payment_method'],
             'status' => 'pending',
+            'stripe_payment_intent_id' => $paymentIntent->id,
         ]);
 
         $order->load([
@@ -72,7 +85,8 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Order Created Successfully',
-            'data' => new OrderResource($order)
+            'data' => new OrderResource($order),
+            'client_secret' => $paymentIntent->client_secret,
         ], 201);
     }
 

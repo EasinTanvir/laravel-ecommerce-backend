@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Category;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoryRequest;
 use App\Http\Resources\CategoryResource;
+use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use Illuminate\Support\Str;
 
@@ -44,20 +45,72 @@ class CategoryController extends Controller
     /**
      * Display the specified resource.
      */
-public function show(Category $category)
+
+    public function show(Category $category)
 {
+    $perPage = request('per_page', 8);
 
-   $category->load([
-        'products:id,name,price'
-    ]);
+    $minPrice = request('min_price');
 
-    
+    $maxPrice = request('max_price');
+
+    $sort = request('sort', 'latest');
+
+    $products = $category->products()
+
+        ->when($minPrice, function ($query) use ($minPrice) {
+
+            $query->where('price', '>=', $minPrice);
+
+        })
+
+        ->when($maxPrice, function ($query) use ($maxPrice) {
+
+            $query->where('price', '<=', $maxPrice);
+
+        })
+
+        ->when($sort === 'latest', function ($query) {
+
+            $query->latest();
+
+        })
+
+        ->when($sort === 'oldest', function ($query) {
+
+            $query->oldest();
+
+        })
+
+        ->paginate($perPage);
+
     return response()->json([
 
         'message' => 'Category Found',
-        'data' => new CategoryResource($category)
+
+        'category' => [
+            'id' => $category->id,
+            'name' => $category->name,
+            'slug' => $category->slug,
+        ],
+
+        'products' => ProductResource::collection(
+            $products->items()
+        ),
+
+        'pagination' => [
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+        ]
     ]);
 }
+
+
+
+
+
 
     /**
      * Update the specified resource in storage.

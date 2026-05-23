@@ -12,6 +12,11 @@ class Category extends Model
 
     protected $fillable = ['name', 'slug'];
 
+     public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class);

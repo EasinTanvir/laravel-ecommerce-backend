@@ -13,6 +13,7 @@
         "dedoc/scramble": "^0.13.23",
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
+        "laravel/socialite": "^5.27",
         "laravel/tinker": "^3.0",
         "stripe/stripe-php": "^20.1"
     },

@@ -2,6 +2,7 @@
 
 
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LoginHandler;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -36,3 +37,14 @@ Route::post('/email/verification-notification', [EmailVerificationNotificationCo
 Route::post('/logout', [LoginHandler::class, 'destroy'])
     ->middleware('auth:sanctum')
     ->name('logout');
+
+
+    Route::get(
+    '/auth/google',
+    [GoogleAuthController::class, 'redirect']
+);
+
+Route::get(
+    '/auth/google/callback',
+    [GoogleAuthController::class, 'callback']
+);

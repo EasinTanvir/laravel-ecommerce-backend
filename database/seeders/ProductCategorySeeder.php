@@ -10,16 +10,17 @@ class ProductCategorySeeder extends Seeder
 {
     public function run(): void
     {
-        // Create categories
+        // Create 10 categories
         $categories = Category::factory(10)->create();
 
-        // Create products
-        $products = Product::factory(30)->create();
+        foreach ($categories as $category) {
 
-        // Attach random categories to products
-        foreach ($products as $product) {
-            $product->categories()->attach(
-                $categories->random(rand(1, 3))->pluck('id')
+            // Create 16 products for this category
+            $products = Product::factory(16)->create();
+
+            // Attach products to category
+            $category->products()->attach(
+                $products->pluck('id')
             );
         }
     }

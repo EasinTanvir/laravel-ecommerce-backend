@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Admin\Products;
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Http\Resources\ProductResource;
